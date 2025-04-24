@@ -29,12 +29,12 @@ export async function easyAppointmentsApiRequest(
 		url: '',
 		json: true,
 	};
-	
+
 	// Ensure endpoint starts with a slash
 	if (!endpoint.startsWith('/')) {
 		endpoint = `/${endpoint}`;
 	}
-	
+
 	// Set the endpoint as the url path
 	options.url = endpoint;
 
@@ -46,8 +46,24 @@ export async function easyAppointmentsApiRequest(
 		delete options.qs;
 	}
 
+	const credentials = await this.getCredentials('easyAppointmentsApi');
+	let baseUrl = credentials.baseUrl as string;
+
+	// remove trailing slash from baseUrl if it exists
+	if (baseUrl.endsWith('/')) {
+		baseUrl = baseUrl.slice(0, -1);
+	}
+	options.url = `${baseUrl}${options.url}`;
+
+	const infoString = JSON.stringify({
+		method,
+		endpoint,
+		body,
+		qs,
+	});
+
 	// Log the request details for debugging
-	this.logger.debug('Making Easy!Appointments API request', { 
+	this.logger.error('Making Easy!Appointments API request ' + infoString, {
 		endpoint,
 		method,
 		options,
@@ -176,7 +192,7 @@ export async function getAllResources(
 	// Add resource-specific filters if they exist
 	try {
 		const filters = this.getNodeParameter('filters', itemIndex, {}) as IDataObject;
-		
+
 		// Merge filters into query parameters
 		Object.assign(qs, filters);
 	} catch (error) {
