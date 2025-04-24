@@ -105,16 +105,6 @@ export class EasyAppointmentsTrigger implements INodeType {
 						description: 'Triggered when a secretary is deleted',
 					},
 					{
-						name: 'Service Created/Updated',
-						value: 'service_save',
-						description: 'Triggered when a service is created or updated',
-					},
-					{
-						name: 'Service Deleted',
-						value: 'service_delete',
-						description: 'Triggered when a service is deleted',
-					},
-					{
 						name: 'Service Category Created/Updated',
 						value: 'service_category_save',
 						description: 'Triggered when a service category is created or updated',
@@ -123,6 +113,16 @@ export class EasyAppointmentsTrigger implements INodeType {
 						name: 'Service Category Deleted',
 						value: 'service_category_delete',
 						description: 'Triggered when a service category is deleted',
+					},
+					{
+						name: 'Service Created/Updated',
+						value: 'service_save',
+						description: 'Triggered when a service is created or updated',
+					},
+					{
+						name: 'Service Deleted',
+						value: 'service_delete',
+						description: 'Triggered when a service is deleted',
 					},
 					{
 						name: 'Unavailability Created/Updated',
@@ -295,15 +295,22 @@ export class EasyAppointmentsTrigger implements INodeType {
 		});
 
 		// Validate secret token if provided
-		if (secretToken && headerData['x-ea-signature'] !== secretToken) {
+		if (secretToken && headerData['x-ea-token'] !== secretToken) {
 			this.logger.warn('Webhook request rejected: Invalid signature', {
 				expected: secretToken,
-				received: headerData['x-ea-signature'],
+				received: headerData['x-ea-token'],
 			});
 			// Return unauthorized if the signature doesn't match
 			return {
 				// Return empty response
-				workflowData: [],
+				workflowData: [
+					this.helpers.returnJsonArray({
+						message: 'Invalid signature',
+						expected: secretToken,
+						received: headerData['x-ea-token'],
+						headerData,
+					}),
+				],
 			};
 		}
 
