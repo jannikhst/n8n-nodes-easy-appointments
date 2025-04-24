@@ -15,14 +15,8 @@ export class EasyAppointmentsApi implements ICredentialType {
 			name: 'authenticationType',
 			type: 'options',
 			options: [
-				{
-					name: 'Bearer Token',
-					value: 'bearerToken',
-				},
-				{
-					name: 'Basic Auth',
-					value: 'basicAuth',
-				},
+				{ name: 'Bearer Token', value: 'bearerToken' },
+				{ name: 'Basic Auth', value: 'basicAuth' },
 			],
 			default: 'bearerToken',
 		},
@@ -32,14 +26,10 @@ export class EasyAppointmentsApi implements ICredentialType {
 			type: 'string',
 			default: '',
 			displayOptions: {
-				show: {
-					authenticationType: ['bearerToken'],
-				},
+				show: { authenticationType: ['bearerToken'] },
 			},
-			typeOptions: {
-				password: true,
-			},
-			description: 'The API key obtained from the Easy!Appointments settings page',
+			typeOptions: { password: true },
+			description: 'The API key from Easy!Appointments settings',
 		},
 		{
 			displayName: 'Username',
@@ -47,11 +37,9 @@ export class EasyAppointmentsApi implements ICredentialType {
 			type: 'string',
 			default: '',
 			displayOptions: {
-				show: {
-					authenticationType: ['basicAuth'],
-				},
+				show: { authenticationType: ['basicAuth'] },
 			},
-			description: 'Username of an admin user',
+			description: 'Admin username',
 		},
 		{
 			displayName: 'Password',
@@ -59,35 +47,33 @@ export class EasyAppointmentsApi implements ICredentialType {
 			type: 'string',
 			default: '',
 			displayOptions: {
-				show: {
-					authenticationType: ['basicAuth'],
-				},
+				show: { authenticationType: ['basicAuth'] },
 			},
-			typeOptions: {
-				password: true,
-			},
-			description: 'Password of an admin user',
+			typeOptions: { password: true },
+			description: 'Admin password',
 		},
 		{
 			displayName: 'Base URL',
 			name: 'baseUrl',
 			type: 'string',
 			default: 'https://demo.easyappointments.org/index.php/api/v1',
-			description: 'The base URL of your Easy!Appointments installation',
+			description: 'Your Easy!Appointments base URL',
 		},
 	];
 
 	authenticate: IAuthenticateGeneric = {
 		type: 'generic',
 		properties: {
-			auth: {
-				// Basic Auth is only used when authenticationType is set to basicAuth
-				username: '={{ $credentials.authenticationType === "basicAuth" ? $credentials.username : undefined }}',
-				password: '={{ $credentials.authenticationType === "basicAuth" ? $credentials.password : undefined }}',
-			},
 			headers: {
-				// Bearer Token is only used when authenticationType is set to bearerToken
-				Authorization: '={{ $credentials.authenticationType === "bearerToken" ? "Bearer " + $credentials.apiKey : undefined }}',
+				Authorization:
+					`={{ 
+						$credentials.authenticationType === "bearerToken" 
+							? "Bearer " + $credentials.apiKey 
+							: ($credentials.authenticationType === "basicAuth" 
+								? "Basic " + Buffer.from($credentials.username + ":" + $credentials.password).toString("base64") 
+								: undefined
+							) 
+					}}`,
 			},
 		},
 	};
