@@ -113,7 +113,7 @@ export class EasyAppointmentsTrigger implements INodeType {
 				displayName: 'Webhook Name',
 				name: 'webhookName',
 				type: 'string',
-				default: 'n8n-webhook',
+				default: '={{`n8n-hook-${$parameter.event}`}}',
 				required: true,
 				description: 'The name of the webhook in Easy!Appointments',
 			},
@@ -144,9 +144,19 @@ export class EasyAppointmentsTrigger implements INodeType {
 				const webhookUrl = this.getNodeWebhookUrl('default');
 				const webhookName = this.getNodeParameter('webhookName') as string;
 
+				this.logger.debug('Checking if Easy!Appointments webhook exists', { 
+					webhookName,
+					webhookUrl,
+				});
+
 				try {
 					// Get all webhooks
 					const webhooks = await easyAppointmentsApiRequestAllItems.call(this, 'GET', '/webhooks');
+					
+					this.logger.debug('Retrieved existing webhooks', { 
+						count: webhooks.length,
+						webhooks,
+					});
 
 					// Check if webhook exists
 					for (const webhook of webhooks) {
@@ -154,10 +164,14 @@ export class EasyAppointmentsTrigger implements INodeType {
 							// Save webhook ID for later use
 							const webhookData = this.getWorkflowStaticData('node');
 							webhookData.webhookId = webhook.id;
+							this.logger.debug('Found existing webhook', { webhookId: webhook.id });
 							return true;
 						}
 					}
+					
+					this.logger.debug('No matching webhook found');
 				} catch (error) {
+					this.logger.error('Error checking for existing webhooks', { error });
 					if (error.response && error.response.status === 404) {
 						return false;
 					}
@@ -177,26 +191,37 @@ export class EasyAppointmentsTrigger implements INodeType {
 				const body: IDataObject = {
 					name: webhookName,
 					url: webhookUrl,
-					actions: event,
+					actions: [event],
 					secretToken,
 					isSslVerified: verifySSL,
 				};
+
+				// Log the webhook creation request for debugging
+				this.logger.debug('Creating Easy!Appointments webhook', { 
+					webhookName,
+					webhookUrl,
+					event,
+					body,
+				});
 
 				try {
 					const webhook = await easyAppointmentsApiRequest.call(this, 'POST', '/webhooks', body);
 
 					if (webhook.id === undefined) {
+						this.logger.error('Webhook creation failed - no ID returned', { webhook });
 						throw new NodeApiError(this.getNode(), webhook, {
-							message: 'Webhook creation failed',
+							message: 'Webhook creation failed - no ID returned',
 						});
 					}
 
 					// Save webhook ID for later use
 					const webhookData = this.getWorkflowStaticData('node');
 					webhookData.webhookId = webhook.id;
+					this.logger.debug('Webhook created successfully', { webhookId: webhook.id });
 
 					return true;
 				} catch (error) {
+					this.logger.error('Error creating webhook', { error });
 					throw error;
 				}
 			},
@@ -205,17 +230,23 @@ export class EasyAppointmentsTrigger implements INodeType {
 				const webhookData = this.getWorkflowStaticData('node');
 
 				if (webhookData.webhookId !== undefined) {
+					this.logger.debug('Deleting Easy!Appointments webhook', { webhookId: webhookData.webhookId });
+					
 					try {
 						await easyAppointmentsApiRequest.call(
 							this,
 							'DELETE',
 							`/webhooks/${webhookData.webhookId}`,
 						);
+						this.logger.debug('Webhook deleted successfully');
 					} catch (error) {
+						this.logger.error('Error deleting webhook', { error, webhookId: webhookData.webhookId });
 						return false;
 					}
 
 					delete webhookData.webhookId;
+				} else {
+					this.logger.debug('No webhook ID found to delete');
 				}
 
 				return true;
@@ -228,8 +259,17 @@ export class EasyAppointmentsTrigger implements INodeType {
 		const headerData = this.getHeaderData() as IDataObject;
 		const secretToken = this.getNodeParameter('secretToken') as string;
 
+		this.logger.debug('Received webhook request', { 
+			headers: headerData,
+			body: bodyData,
+		});
+
 		// Validate secret token if provided
 		if (secretToken && headerData['x-ea-signature'] !== secretToken) {
+			this.logger.warn('Webhook request rejected: Invalid signature', {
+				expected: secretToken,
+				received: headerData['x-ea-signature'],
+			});
 			// Return unauthorized if the signature doesn't match
 			return {
 				// Return empty response
@@ -237,6 +277,7 @@ export class EasyAppointmentsTrigger implements INodeType {
 			};
 		}
 
+		this.logger.debug('Webhook request accepted');
 		return {
 			// Return empty 200 response for successful delivery
 			workflowData: [this.helpers.returnJsonArray(bodyData)],
