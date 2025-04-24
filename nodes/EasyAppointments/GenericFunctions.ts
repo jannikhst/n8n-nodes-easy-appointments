@@ -46,9 +46,19 @@ export async function easyAppointmentsApiRequest(
 		delete options.qs;
 	}
 
+	// Log the request details for debugging
+	this.logger.debug('Making Easy!Appointments API request', { 
+		endpoint,
+		method,
+		options,
+	});
+
 	try {
-		return await this.helpers.httpRequestWithAuthentication.call(this, 'easyAppointmentsApi', options);
+		const result = await this.helpers.httpRequestWithAuthentication.call(this, 'easyAppointmentsApi', options);
+		this.logger.debug('Easy!Appointments API request successful');
+		return result;
 	} catch (error) {
+		this.logger.error('Easy!Appointments API request failed', { error });
 		throw new NodeApiError(this.getNode(), error);
 	}
 }
