@@ -55,20 +55,6 @@ export async function easyAppointmentsApiRequest(
 	}
 	options.url = `${baseUrl}${options.url}`;
 
-	const infoString = JSON.stringify({
-		method,
-		endpoint,
-		body,
-		qs,
-	});
-
-	// Log the request details for debugging
-	this.logger.error('Making Easy!Appointments API request ' + infoString, {
-		endpoint,
-		method,
-		options,
-	});
-
 	try {
 		const result = await this.helpers.httpRequestWithAuthentication.call(this, 'easyAppointmentsApi', options);
 		this.logger.debug('Easy!Appointments API request successful');
