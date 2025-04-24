@@ -45,9 +45,19 @@ export class EasyAppointmentsTrigger implements INodeType {
 				type: 'options',
 				options: [
 					{
-						name: 'Appointment Created',
-						value: 'appointment_create',
-						description: 'Triggered when an appointment is created',
+						name: 'Admin Created/Updated',
+						value: 'admin_save',
+						description: 'Triggered when an admin is created or updated',
+					},
+					{
+						name: 'Admin Deleted',
+						value: 'admin_delete',
+						description: 'Triggered when an admin is deleted',
+					},
+					{
+						name: 'Appointment Created/Updated',
+						value: 'appointment_save',
+						description: 'Triggered when an appointment is created or updated',
 					},
 					{
 						name: 'Appointment Deleted',
@@ -55,14 +65,19 @@ export class EasyAppointmentsTrigger implements INodeType {
 						description: 'Triggered when an appointment is deleted',
 					},
 					{
-						name: 'Appointment Updated',
-						value: 'appointment_update',
-						description: 'Triggered when an appointment is updated',
+						name: 'Blocked Period Created/Updated',
+						value: 'blocked_period_save',
+						description: 'Triggered when a blocked period is created or updated',
 					},
 					{
-						name: 'Customer Created',
-						value: 'customer_create',
-						description: 'Triggered when a customer is created',
+						name: 'Blocked Period Deleted',
+						value: 'blocked_period_delete',
+						description: 'Triggered when a blocked period is deleted',
+					},
+					{
+						name: 'Customer Created/Updated',
+						value: 'customer_save',
+						description: 'Triggered when a customer is created or updated',
 					},
 					{
 						name: 'Customer Deleted',
@@ -70,14 +85,9 @@ export class EasyAppointmentsTrigger implements INodeType {
 						description: 'Triggered when a customer is deleted',
 					},
 					{
-						name: 'Customer Updated',
-						value: 'customer_update',
-						description: 'Triggered when a customer is updated',
-					},
-					{
-						name: 'Provider Created',
-						value: 'provider_create',
-						description: 'Triggered when a provider is created',
+						name: 'Provider Created/Updated',
+						value: 'provider_save',
+						description: 'Triggered when a provider is created or updated',
 					},
 					{
 						name: 'Provider Deleted',
@@ -85,14 +95,19 @@ export class EasyAppointmentsTrigger implements INodeType {
 						description: 'Triggered when a provider is deleted',
 					},
 					{
-						name: 'Provider Updated',
-						value: 'provider_update',
-						description: 'Triggered when a provider is updated',
+						name: 'Secretary Created/Updated',
+						value: 'secretary_save',
+						description: 'Triggered when a secretary is created or updated',
 					},
 					{
-						name: 'Service Created',
-						value: 'service_create',
-						description: 'Triggered when a service is created',
+						name: 'Secretary Deleted',
+						value: 'secretary_delete',
+						description: 'Triggered when a secretary is deleted',
+					},
+					{
+						name: 'Service Created/Updated',
+						value: 'service_save',
+						description: 'Triggered when a service is created or updated',
 					},
 					{
 						name: 'Service Deleted',
@@ -100,12 +115,27 @@ export class EasyAppointmentsTrigger implements INodeType {
 						description: 'Triggered when a service is deleted',
 					},
 					{
-						name: 'Service Updated',
-						value: 'service_update',
-						description: 'Triggered when a service is updated',
+						name: 'Service Category Created/Updated',
+						value: 'service_category_save',
+						description: 'Triggered when a service category is created or updated',
+					},
+					{
+						name: 'Service Category Deleted',
+						value: 'service_category_delete',
+						description: 'Triggered when a service category is deleted',
+					},
+					{
+						name: 'Unavailability Created/Updated',
+						value: 'unavailability_save',
+						description: 'Triggered when an unavailability is created or updated',
+					},
+					{
+						name: 'Unavailability Deleted',
+						value: 'unavailability_delete',
+						description: 'Triggered when an unavailability is deleted',
 					},
 				],
-				default: 'appointment_create',
+				default: 'appointment_save',
 				required: true,
 				description: 'The event to listen to',
 			},
@@ -113,7 +143,7 @@ export class EasyAppointmentsTrigger implements INodeType {
 				displayName: 'Webhook Name',
 				name: 'webhookName',
 				type: 'string',
-				default: '={{`n8n-hook-${$parameter.event}`}}',
+				default: 'n8n-hook',
 				required: true,
 				description: 'The name of the webhook in Easy!Appointments',
 			},
@@ -189,9 +219,9 @@ export class EasyAppointmentsTrigger implements INodeType {
 				const verifySSL = this.getNodeParameter('verifySSL') as boolean;
 
 				const body: IDataObject = {
-					name: webhookName,
+					name: webhookName + ' - ' + event,
 					url: webhookUrl,
-					actions: [event],
+					actions: event,
 					secretToken,
 					isSslVerified: verifySSL,
 				};
