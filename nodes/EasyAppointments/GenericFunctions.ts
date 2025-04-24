@@ -26,9 +26,17 @@ export async function easyAppointmentsApiRequest(
 		method,
 		body,
 		qs,
-		url: endpoint,
+		url: '',
 		json: true,
 	};
+	
+	// Ensure endpoint starts with a slash
+	if (!endpoint.startsWith('/')) {
+		endpoint = `/${endpoint}`;
+	}
+	
+	// Set the endpoint as the url path
+	options.url = endpoint;
 
 	if (!Object.keys(body).length) {
 		delete options.body;
