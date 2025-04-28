@@ -4,6 +4,7 @@ import {
 	INodeType,
 	INodeTypeDescription,
 	IDataObject,
+	NodeOperationError,
 } from 'n8n-workflow';
 
 import {
@@ -1087,13 +1088,6 @@ export class EasyAppointments implements INodeType {
 				else if (resource === 'provider') {
 					if (operation === 'create') {
 						// Create a provider
-						const fields = [
-							'firstName',
-							'lastName',
-							'email',
-							'phone',
-						];
-
 						// Create a body object for the request
 						const body: IDataObject = {};
 						
@@ -1134,7 +1128,7 @@ export class EasyAppointments implements INodeType {
 							try {
 								body.settings = JSON.parse(additionalFields.settings);
 							} catch (error) {
-								throw new Error(`Invalid settings JSON: ${error.message}`);
+								throw new NodeOperationError(this.getNode(), `Invalid settings JSON: ${error.message}`);
 							}
 						}
 
@@ -1194,7 +1188,7 @@ export class EasyAppointments implements INodeType {
 							try {
 								body.settings = JSON.parse(additionalFields.settings);
 							} catch (error) {
-								throw new Error(`Invalid settings JSON: ${error.message}`);
+								throw new NodeOperationError(this.getNode(), `Invalid settings JSON: ${error.message}`);
 							}
 						}
 
