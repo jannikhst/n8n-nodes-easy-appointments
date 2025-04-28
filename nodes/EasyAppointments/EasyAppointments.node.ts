@@ -63,6 +63,10 @@ export class EasyAppointments implements INodeType {
 						value: 'customer',
 					},
 					{
+						name: 'Provider',
+						value: 'provider',
+					},
+					{
 						name: 'Service',
 						value: 'service',
 					},
@@ -79,7 +83,7 @@ export class EasyAppointments implements INodeType {
 				noDataExpression: true,
 				displayOptions: {
 					show: {
-						resource: ['appointment', 'customer', 'service'],
+						resource: ['appointment', 'customer', 'provider', 'service'],
 					},
 				},
 				options: [
@@ -642,6 +646,162 @@ export class EasyAppointments implements INodeType {
 				],
 			},
 
+			// PROVIDER FIELDS
+			{
+				displayName: 'Provider ID',
+				name: 'providerId',
+				type: 'string',
+				required: true,
+				default: '',
+				displayOptions: {
+					show: {
+						resource: ['provider'],
+						operation: ['get', 'update', 'delete'],
+					},
+				},
+				description: 'The ID of the provider',
+			},
+			{
+				displayName: 'First Name',
+				name: 'firstName',
+				type: 'string',
+				default: '',
+				displayOptions: {
+					show: {
+						resource: ['provider'],
+						operation: ['create', 'update'],
+					},
+				},
+				description: 'The first name of the provider',
+			},
+			{
+				displayName: 'Last Name',
+				name: 'lastName',
+				type: 'string',
+				default: '',
+				displayOptions: {
+					show: {
+						resource: ['provider'],
+						operation: ['create', 'update'],
+					},
+				},
+				description: 'The last name of the provider',
+			},
+			{
+				displayName: 'Email',
+				name: 'email',
+				type: 'string',
+				placeholder: 'name@email.com',
+				default: '',
+				displayOptions: {
+					show: {
+						resource: ['provider'],
+						operation: ['create', 'update'],
+					},
+				},
+				description: 'The email address of the provider',
+			},
+			{
+				displayName: 'Phone',
+				name: 'phone',
+				type: 'string',
+				default: '',
+				displayOptions: {
+					show: {
+						resource: ['provider'],
+						operation: ['create', 'update'],
+					},
+				},
+				description: 'The phone number of the provider',
+			},
+			{
+				displayName: 'Services',
+				name: 'services',
+				type: 'string',
+				default: '',
+				displayOptions: {
+					show: {
+						resource: ['provider'],
+						operation: ['create', 'update'],
+					},
+				},
+				description: 'Comma-separated list of service IDs that the provider can provide',
+			},
+			{
+				displayName: 'Additional Fields',
+				name: 'additionalFields',
+				type: 'collection',
+				placeholder: 'Add Field',
+				default: {},
+				displayOptions: {
+					show: {
+						resource: ['provider'],
+						operation: ['create', 'update'],
+					},
+				},
+				options: [
+					{
+						displayName: 'Address',
+						name: 'address',
+						type: 'string',
+						default: '',
+						description: 'The address of the provider',
+					},
+					{
+						displayName: 'City',
+						name: 'city',
+						type: 'string',
+						default: '',
+						description: 'The city of the provider',
+					},
+					{
+						displayName: 'ZIP',
+						name: 'zip',
+						type: 'string',
+						default: '',
+						description: 'The ZIP code of the provider',
+					},
+					{
+						displayName: 'Notes',
+						name: 'notes',
+						type: 'string',
+						typeOptions: {
+							rows: 4,
+						},
+						default: '',
+						description: 'Notes about the provider',
+					},
+					{
+						displayName: 'Timezone',
+						name: 'timezone',
+						type: 'string',
+						default: 'UTC',
+						description: 'The timezone of the provider',
+					},
+					{
+						displayName: 'Language',
+						name: 'language',
+						type: 'string',
+						default: 'english',
+						description: 'The language of the provider',
+					},
+					{
+						displayName: 'Is Private',
+						name: 'isPrivate',
+						type: 'boolean',
+						default: false,
+						description: 'Whether the provider is private',
+					},
+					{
+						displayName: 'Settings',
+						name: 'settings',
+						type: 'json',
+						default: '{}',
+						description: 'Provider settings as JSON object (username, password, notifications, etc.)',
+					},
+				],
+			},
+
 			// AVAILABILITY FIELDS
 			{
 				displayName: 'Provider ID',
@@ -920,6 +1080,125 @@ export class EasyAppointments implements INodeType {
 						if (additionalFields.serviceCategoryId) fields.push('serviceCategoryId');
 
 						responseData = await updateResource.call(this, i, `/services/${serviceId}`, fields);
+					}
+				}
+				
+				// PROVIDER OPERATIONS
+				else if (resource === 'provider') {
+					if (operation === 'create') {
+						// Create a provider
+						const fields = [
+							'firstName',
+							'lastName',
+							'email',
+							'phone',
+						];
+
+						// Create a body object for the request
+						const body: IDataObject = {};
+						
+						// Add basic fields
+						body.firstName = this.getNodeParameter('firstName', i, '') as string;
+						body.lastName = this.getNodeParameter('lastName', i, '') as string;
+						body.email = this.getNodeParameter('email', i, '') as string;
+						body.phone = this.getNodeParameter('phone', i, '') as string;
+						
+						// Handle services field (convert comma-separated string to array)
+						const services = this.getNodeParameter('services', i, '') as string;
+						if (services) {
+							body.services = services.split(',').map(id => parseInt(id.trim(), 10));
+						}
+
+						// Add additional fields if provided
+						const additionalFields = this.getNodeParameter('additionalFields', i, {}) as {
+							address?: string;
+							city?: string;
+							zip?: string;
+							notes?: string;
+							timezone?: string;
+							language?: string;
+							isPrivate?: boolean;
+							settings?: string;
+						};
+
+						if (additionalFields.address) body.address = additionalFields.address;
+						if (additionalFields.city) body.city = additionalFields.city;
+						if (additionalFields.zip) body.zip = additionalFields.zip;
+						if (additionalFields.notes) body.notes = additionalFields.notes;
+						if (additionalFields.timezone) body.timezone = additionalFields.timezone;
+						if (additionalFields.language) body.language = additionalFields.language;
+						if (additionalFields.isPrivate !== undefined) body.isPrivate = additionalFields.isPrivate;
+						
+						// Handle settings as JSON
+						if (additionalFields.settings) {
+							try {
+								body.settings = JSON.parse(additionalFields.settings);
+							} catch (error) {
+								throw new Error(`Invalid settings JSON: ${error.message}`);
+							}
+						}
+
+						responseData = await easyAppointmentsApiRequest.call(this, 'POST', '/providers', body);
+					} else if (operation === 'delete') {
+						// Delete a provider
+						const providerId = this.getNodeParameter('providerId', i) as string;
+						responseData = await deleteResource.call(this, i, `/providers/${providerId}`);
+					} else if (operation === 'get') {
+						// Get a single provider
+						const providerId = this.getNodeParameter('providerId', i) as string;
+						responseData = await getResource.call(this, i, `/providers/${providerId}`);
+					} else if (operation === 'getAll') {
+						// Get all providers
+						responseData = await getAllResources.call(this, i, '/providers');
+					} else if (operation === 'update') {
+						// Update a provider
+						const providerId = this.getNodeParameter('providerId', i) as string;
+						
+						// Create a body object for the request
+						const body: IDataObject = {};
+						
+						// Add basic fields
+						body.firstName = this.getNodeParameter('firstName', i, '') as string;
+						body.lastName = this.getNodeParameter('lastName', i, '') as string;
+						body.email = this.getNodeParameter('email', i, '') as string;
+						body.phone = this.getNodeParameter('phone', i, '') as string;
+						
+						// Handle services field (convert comma-separated string to array)
+						const services = this.getNodeParameter('services', i, '') as string;
+						if (services) {
+							body.services = services.split(',').map(id => parseInt(id.trim(), 10));
+						}
+
+						// Add additional fields if provided
+						const additionalFields = this.getNodeParameter('additionalFields', i, {}) as {
+							address?: string;
+							city?: string;
+							zip?: string;
+							notes?: string;
+							timezone?: string;
+							language?: string;
+							isPrivate?: boolean;
+							settings?: string;
+						};
+
+						if (additionalFields.address) body.address = additionalFields.address;
+						if (additionalFields.city) body.city = additionalFields.city;
+						if (additionalFields.zip) body.zip = additionalFields.zip;
+						if (additionalFields.notes) body.notes = additionalFields.notes;
+						if (additionalFields.timezone) body.timezone = additionalFields.timezone;
+						if (additionalFields.language) body.language = additionalFields.language;
+						if (additionalFields.isPrivate !== undefined) body.isPrivate = additionalFields.isPrivate;
+						
+						// Handle settings as JSON
+						if (additionalFields.settings) {
+							try {
+								body.settings = JSON.parse(additionalFields.settings);
+							} catch (error) {
+								throw new Error(`Invalid settings JSON: ${error.message}`);
+							}
+						}
+
+						responseData = await easyAppointmentsApiRequest.call(this, 'PUT', `/providers/${providerId}`, body);
 					}
 				}
 				

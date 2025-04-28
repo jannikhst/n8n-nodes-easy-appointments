@@ -36,6 +36,7 @@ export class EasyAppointmentsTrigger implements INodeType {
 				httpMethod: 'POST',
 				responseMode: 'onReceived',
 				path: 'webhook',
+				responseData: 'noData',
 			},
 		],
 		properties: [
@@ -318,6 +319,7 @@ export class EasyAppointmentsTrigger implements INodeType {
 		return {
 			// Return empty 200 response for successful delivery
 			workflowData: [this.helpers.returnJsonArray(bodyData)],
+			webhookResponse: '',
 		};
 	}
 }
