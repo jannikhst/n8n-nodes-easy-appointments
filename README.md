@@ -1,5 +1,7 @@
 # n8n-nodes-easy-appointments
 
+![Thumbnail](https://raw.githubusercontent.com/jannikhst/n8n-nodes-easy-appointments/main/screenshot-2025-08-08-000276.png)
+
 This package contains n8n nodes to interact with the [Easy!Appointments](https://easyappointments.org/) API.
 
 [n8n](https://n8n.io/) is a [fair-code licensed](https://docs.n8n.io/reference/license/) workflow automation platform.
